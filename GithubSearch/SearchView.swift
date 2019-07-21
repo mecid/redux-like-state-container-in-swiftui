@@ -8,36 +8,13 @@
 import SwiftUI
 import Combine
 
-struct LoadableImage: View {
-    let url: URL
-
-    @State private var uiImage: UIImage? = nil
-
-    var body: some View {
-        if let image = uiImage {
-            return AnyView(Image(uiImage: image).resizable())
-        } else {
-            return AnyView(Image(systemName: "photo").onAppear(perform: fetch))
-        }
-    }
-
-    private func fetch() {
-        URLSession.shared.dataTask(with: url) { data, _, _ in
-            if let data = data, let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    self.uiImage = image
-                }
-            }
-        }.resume()
-    }
-}
-
 struct RepoRow: View {
     let repo: Repo
 
     var body: some View {
         HStack(alignment: .top) {
-            LoadableImage(url: repo.owner.avatar)
+            Image(systemName: "photo") // placeholder
+                .fetchingRemoteImage(from: repo.owner.avatar)
                 .frame(width: 44, height: 44)
             VStack(alignment: .leading) {
                 Text(repo.name)
