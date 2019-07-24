@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(
-            rootView: SearchView()
+            rootView: SearchContainerView()
                 .environmentObject(ReposStore(service: .init()))
         )
         self.window = window

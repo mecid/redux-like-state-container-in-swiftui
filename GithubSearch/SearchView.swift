@@ -21,37 +21,43 @@ struct RepoRow: View {
                     .font(.headline)
                 Text(repo.description ?? "")
                     .font(.subheadline)
-                    .lineLimit(nil)
             }
         }
     }
 }
 
-struct SearchView : View {
+struct SearchContainerView: View {
     @EnvironmentObject var store: ReposStore
     @State private var query: String = "Swift"
 
     var body: some View {
-        NavigationView {
-            List {
-                TextField("type something...", text: $query, onCommit: fetch)
-
-                if store.repos.isEmpty {
-                    Text("Loading...")
-                } else {
-                    ForEach(store.repos) { repo in
-                        NavigationLink(destination: RepoRow(repo: repo)) {
-                            RepoRow(repo: repo)
-                        }
-                    }
-                }
-            }
-                .onAppear(perform: fetch)
-                .navigationBarTitle(Text("Search"))
-        }
+        SearchView(query: $query, repos: store.repos, onCommit: fetch)
+            .onAppear(perform: fetch)
     }
 
     private func fetch() {
         store.fetch(matching: query)
+    }
+}
+
+struct SearchView : View {
+    @Binding var query: String
+    let repos: [Repo]
+    let onCommit: () -> Void
+
+    var body: some View {
+        NavigationView {
+            List {
+                TextField("Type something", text: $query, onCommit: onCommit)
+
+                if repos.isEmpty {
+                    Text("Loading...")
+                } else {
+                    ForEach(repos) { repo in
+                        RepoRow(repo: repo)
+                    }
+                }
+            }.navigationBarTitle(Text("Search"))
+        }
     }
 }
