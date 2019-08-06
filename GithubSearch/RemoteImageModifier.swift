@@ -11,7 +11,7 @@ import SwiftUI
 
 extension Image {
     func fetchingRemoteImage(from url: URL) -> some View {
-        modifier(RemoteImageModifier(url: url))
+        ModifiedContent(content: self, modifier: RemoteImageModifier(url: url))
     }
 }
 
