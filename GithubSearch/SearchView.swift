@@ -54,10 +54,34 @@ struct SearchView : View {
                     Text("Loading...")
                 } else {
                     ForEach(repos) { repo in
-                        RepoRow(repo: repo)
+                        NavigationLink(
+                            destination: Details(repo: repo)
+                                .environmentObject(ReposStore(service: .init()))
+                    ) {
+                            RepoRow(repo: repo)
+                        }
                     }
                 }
             }.navigationBarTitle(Text("Search"))
         }
+    }
+}
+
+struct Details: View {
+    @EnvironmentObject var store: ReposStore
+    @State private var showSimilar = true
+    @State private var showSimilar1 = true
+    let repo: Repo
+
+    var body: some View {
+        List {
+            Text(repo.name).bold()
+            Toggle("show similar", isOn: $showSimilar)
+            if showSimilar {
+                ForEach(store.repos) { repo in
+                    Text(repo.name)
+                }
+            }
+        }.onAppear(perform: { self.store.fetch(matching: self.repo.name) })
     }
 }

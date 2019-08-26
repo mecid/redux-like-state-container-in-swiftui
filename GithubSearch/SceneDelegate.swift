@@ -12,6 +12,7 @@ import SwiftUI
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
+    let store = ReposStore(service: .init())
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = scene as? UIWindowScene else {
@@ -21,7 +22,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(
             rootView: SearchContainerView()
-                .environmentObject(ReposStore(service: .init()))
+                .environmentObject(store)
         )
         self.window = window
         window.makeKeyAndVisible()
@@ -45,8 +46,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        // Called as the scene transitions from the background to the foreground.
-        // Use this method to undo the changes made on entering the background.
+        store.fetch(matching: "Swift")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
