@@ -10,15 +10,14 @@ import UIKit
 import SwiftUI
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
     var window: UIWindow?
-    let store = ReposStore(service: .init())
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = scene as? UIWindowScene else {
             return
         }
 
+        let store = Store<AppState, AppAction>(initialState: AppState(), appReducer: appReducer)
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(
             rootView: SearchContainerView()
@@ -46,7 +45,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        store.fetch(matching: "Swift")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
@@ -54,7 +52,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
-
 }
 

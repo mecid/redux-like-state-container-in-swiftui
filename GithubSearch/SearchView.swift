@@ -13,9 +13,6 @@ struct RepoRow: View {
 
     var body: some View {
         HStack(alignment: .top) {
-            Image(systemName: "photo") // placeholder
-                .fetchingRemoteImage(from: repo.owner.avatar)
-                .frame(width: 44, height: 44)
             VStack(alignment: .leading) {
                 Text(repo.name)
                     .font(.headline)
@@ -27,16 +24,19 @@ struct RepoRow: View {
 }
 
 struct SearchContainerView: View {
-    @EnvironmentObject var store: ReposStore
+    @EnvironmentObject var store: Store<AppState, AppAction>
     @State private var query: String = "Swift"
 
     var body: some View {
-        SearchView(query: $query, repos: store.repos, onCommit: fetch)
-            .onAppear(perform: fetch)
+        SearchView(
+            query: $query,
+            repos: store.state.searchResult,
+            onCommit: fetch
+        ).onAppear(perform: fetch)
     }
 
     private func fetch() {
-        store.fetch(matching: query)
+        store.send(.search(query: query))
     }
 }
 
@@ -54,34 +54,10 @@ struct SearchView : View {
                     Text("Loading...")
                 } else {
                     ForEach(repos) { repo in
-                        NavigationLink(
-                            destination: Details(repo: repo)
-                                .environmentObject(ReposStore(service: .init()))
-                    ) {
-                            RepoRow(repo: repo)
-                        }
+                        RepoRow(repo: repo)
                     }
                 }
             }.navigationBarTitle(Text("Search"))
         }
-    }
-}
-
-struct Details: View {
-    @EnvironmentObject var store: ReposStore
-    @State private var showSimilar = true
-    @State private var showSimilar1 = true
-    let repo: Repo
-
-    var body: some View {
-        List {
-            Text(repo.name).bold()
-            Toggle("show similar", isOn: $showSimilar)
-            if showSimilar {
-                ForEach(store.repos) { repo in
-                    Text(repo.name)
-                }
-            }
-        }.onAppear(perform: { self.store.fetch(matching: self.repo.name) })
     }
 }
