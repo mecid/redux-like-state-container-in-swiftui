@@ -1,39 +1,35 @@
-//
-//  Redux.swift
-//  GithubSearch
-//
-//  Created by Majid Jabrayilov on 9/16/19.
-//  Copyright © 2019 Majid Jabrayilov. All rights reserved.
-//
 import Foundation
 import Combine
 
-protocol Action {
-    associatedtype Mutation
-    func mapToMutation() -> AnyPublisher<Mutation, Never>
+protocol Effect {
+    associatedtype Action
+    func mapToAction() -> AnyPublisher<Action, Never>
 }
 
-typealias Reducer<State, Mutation> = (inout State, Mutation) -> Void
+struct Reducer<State, Action> {
+    let reduce: (inout State, Action) -> Void
+}
 
-final class Store<AppState, AppAction: Action>: ObservableObject {
-    @Published private(set) var state: AppState
+final class Store<State, Action>: ObservableObject {
+    @Published private(set) var state: State
 
-    private let appReducer: Reducer<AppState, AppAction.Mutation>
+    private let appReducer: Reducer<State, Action>
     private var cancellables: Set<AnyCancellable> = []
 
-    init(
-        initialState: AppState,
-        appReducer: @escaping Reducer<AppState, AppAction.Mutation>
-    ) {
+    init(initialState: State, appReducer: Reducer<State, Action>) {
         self.state = initialState
         self.appReducer = appReducer
     }
 
-    func send(_ action: AppAction) {
-        action
-            .mapToMutation()
+    func send(_ action: Action) {
+        appReducer.reduce(&state, action)
+    }
+
+    func send<E: Effect>(_ effect: E) where E.Action == Action {
+        effect
+            .mapToAction()
             .receive(on: DispatchQueue.main)
-            .sink { self.appReducer(&self.state, $0) }
+            .sink(receiveValue: send)
             .store(in: &cancellables)
     }
 }
