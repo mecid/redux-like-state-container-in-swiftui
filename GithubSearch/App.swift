@@ -9,32 +9,32 @@
 import Foundation
 import Combine
 
-enum AppMutation {
-    case searchResults(repos: [Repo])
-}
-
-enum AppAction: Action {
+enum AppSideEffect: Effect {
     case search(query: String)
 
-    func mapToMutation() -> AnyPublisher<AppMutation, Never> {
+    func mapToAction() -> AnyPublisher<AppAction, Never> {
         switch self {
         case let .search(query):
             return dependencies.githubService
                 .searchPublisher(matching: query)
                 .replaceError(with: [])
-                .map { AppMutation.searchResults(repos: $0) }
+                .map { AppAction.setSearchResults(repos: $0) }
                 .eraseToAnyPublisher()
         }
     }
+}
+
+enum AppAction {
+    case setSearchResults(repos: [Repo])
 }
 
 struct AppState {
     var searchResult: [Repo] = []
 }
 
-let appReducer: Reducer<AppState, AppMutation> = { state, mutation in
-    switch mutation {
-    case let .searchResults(repos):
+let appReducer: Reducer<AppState, AppAction> = Reducer { state, action in
+    switch action {
+    case let .setSearchResults(repos):
         state.searchResult = repos
     }
 }
