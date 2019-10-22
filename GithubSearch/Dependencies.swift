@@ -13,9 +13,3 @@ struct Dependencies {
 }
 
 let dependencies = Dependencies(githubService: GithubService())
-
-
-extension UIColor {
-    static var primary = UIColor(named: "primary")
-    static var appBackground = UIColor(named: "background")
-}

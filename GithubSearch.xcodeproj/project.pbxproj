@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1C3152C622A84DBB000F6A69 /* GithubService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3152C522A84DBB000F6A69 /* GithubService.swift */; };
-		1C3152C822A84DF6000F6A69 /* RepoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3152C722A84DF6000F6A69 /* RepoStore.swift */; };
 		1C59D32322A702B200049F5C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C59D32222A702B200049F5C /* AppDelegate.swift */; };
 		1C59D32522A702B200049F5C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C59D32422A702B200049F5C /* SceneDelegate.swift */; };
 		1C59D32922A702B300049F5C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C59D32822A702B300049F5C /* Assets.xcassets */; };
@@ -22,7 +21,6 @@
 
 /* Begin PBXFileReference section */
 		1C3152C522A84DBB000F6A69 /* GithubService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GithubService.swift; sourceTree = "<group>"; };
-		1C3152C722A84DF6000F6A69 /* RepoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoStore.swift; sourceTree = "<group>"; };
 		1C59D31F22A702B200049F5C /* GithubSearch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GithubSearch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C59D32222A702B200049F5C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1C59D32422A702B200049F5C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -74,7 +72,6 @@
 				1C59D33022A702B300049F5C /* Info.plist */,
 				1C59D32A22A702B300049F5C /* Preview Content */,
 				1C3152C522A84DBB000F6A69 /* GithubService.swift */,
-				1C3152C722A84DF6000F6A69 /* RepoStore.swift */,
 				1CC8AF96232F4C88003758CB /* Store.swift */,
 				1CC8AF98232F4CF3003758CB /* App.swift */,
 				1CC8AF9A232F4D28003758CB /* Dependencies.swift */,
@@ -166,7 +163,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1CA1F63E22A817CC00CF6423 /* SearchView.swift in Sources */,
-				1C3152C822A84DF6000F6A69 /* RepoStore.swift in Sources */,
 				1CC8AF97232F4C88003758CB /* Store.swift in Sources */,
 				1C3152C622A84DBB000F6A69 /* GithubService.swift in Sources */,
 				1CC8AF9B232F4D28003758CB /* Dependencies.swift in Sources */,
