@@ -66,43 +66,4 @@ extension Store {
         )
     }
 }
-
-extension Store where State: Codable {
-    func save() {
-        DispatchQueue.global(qos: .utility).async {
-            guard
-                let documentsURL = Current.files.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
-                let data = try? Current.encoder.encode(self.state)
-                else { return }
-
-            try? Current.files.createDirectory(
-                at: documentsURL,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-
-            let stateURL = documentsURL.appendingPathComponent("state.json")
-
-            if Current.files.fileExists(atPath: stateURL.absoluteString) {
-                try? Current.files.removeItem(at: stateURL)
-            }
-
-            try? data.write(to: stateURL, options: .atomic)
-        }
-    }
-
-    func load() {
-        DispatchQueue.global(qos: .utility).async {
-            guard
-                let documentsURL = Current.files.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
-                let data = try? Data(contentsOf: documentsURL.appendingPathComponent("state.json")),
-                let state = try? Current.decoder.decode(State.self, from: data)
-                else { return }
-
-            DispatchQueue.main.async {
-                self.state = state
-            }
-        }
-    }
-}
 ```
