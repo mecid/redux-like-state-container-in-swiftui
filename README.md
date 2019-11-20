@@ -34,12 +34,75 @@ final class Store<State, Action>: ObservableObject {
     }
 
     func send<E: Effect>(_ effect: E) where E.Action == Action {
-        effect
+        var cancellable: AnyCancellable?
+        var didComplete = false
+
+        cancellable = effect
             .mapToAction()
             .receive(on: DispatchQueue.main)
-            .sink(receiveValue: send)
-            .store(in: &cancellables)
+            .sink(
+                receiveCompletion: { [weak self] _ in
+                    didComplete = true
+                    guard let effectCancellable = cancellable else {
+                        return
+                    }
+                    self?.cancellables.remove(effectCancellable)
+                }, receiveValue: send)
+
+        if !didComplete, let effectCancellable = cancellable {
+            cancellables.insert(effectCancellable)
+        }
     }
 }
 
+extension Store {
+    func binding<Value>(
+        for keyPath: KeyPath<State, Value>,
+        _ action: @escaping (Value) -> Action
+    ) -> Binding<Value> {
+        Binding<Value>(
+            get: { self.state[keyPath: keyPath] },
+            set: { self.send(action($0)) }
+        )
+    }
+}
+
+extension Store where State: Codable {
+    func save() {
+        DispatchQueue.global(qos: .utility).async {
+            guard
+                let documentsURL = Current.files.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+                let data = try? Current.encoder.encode(self.state)
+                else { return }
+
+            try? Current.files.createDirectory(
+                at: documentsURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+
+            let stateURL = documentsURL.appendingPathComponent("state.json")
+
+            if Current.files.fileExists(atPath: stateURL.absoluteString) {
+                try? Current.files.removeItem(at: stateURL)
+            }
+
+            try? data.write(to: stateURL, options: .atomic)
+        }
+    }
+
+    func load() {
+        DispatchQueue.global(qos: .utility).async {
+            guard
+                let documentsURL = Current.files.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+                let data = try? Data(contentsOf: documentsURL.appendingPathComponent("state.json")),
+                let state = try? Current.decoder.decode(State.self, from: data)
+                else { return }
+
+            DispatchQueue.main.async {
+                self.state = state
+            }
+        }
+    }
+}
 ```
