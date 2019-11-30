@@ -15,7 +15,7 @@ enum AppSideEffect: Effect {
     func mapToAction() -> AnyPublisher<AppAction, Never> {
         switch self {
         case let .search(query):
-            return dependencies.githubService
+            return Current.githubService
                 .searchPublisher(matching: query)
                 .replaceError(with: [])
                 .map { AppAction.setSearchResults(repos: $0) }

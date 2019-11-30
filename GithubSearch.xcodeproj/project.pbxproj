@@ -16,7 +16,7 @@
 		1CA1F63E22A817CC00CF6423 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA1F63D22A817CC00CF6423 /* SearchView.swift */; };
 		1CC8AF97232F4C88003758CB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC8AF96232F4C88003758CB /* Store.swift */; };
 		1CC8AF99232F4CF3003758CB /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC8AF98232F4CF3003758CB /* App.swift */; };
-		1CC8AF9B232F4D28003758CB /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC8AF9A232F4D28003758CB /* Dependencies.swift */; };
+		1CC8AF9B232F4D28003758CB /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC8AF9A232F4D28003758CB /* Environment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +31,7 @@
 		1CA1F63D22A817CC00CF6423 /* SearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		1CC8AF96232F4C88003758CB /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		1CC8AF98232F4CF3003758CB /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
-		1CC8AF9A232F4D28003758CB /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
+		1CC8AF9A232F4D28003758CB /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,7 +74,7 @@
 				1C3152C522A84DBB000F6A69 /* GithubService.swift */,
 				1CC8AF96232F4C88003758CB /* Store.swift */,
 				1CC8AF98232F4CF3003758CB /* App.swift */,
-				1CC8AF9A232F4D28003758CB /* Dependencies.swift */,
+				1CC8AF9A232F4D28003758CB /* Environment.swift */,
 			);
 			path = GithubSearch;
 			sourceTree = "<group>";
@@ -165,7 +165,7 @@
 				1CA1F63E22A817CC00CF6423 /* SearchView.swift in Sources */,
 				1CC8AF97232F4C88003758CB /* Store.swift in Sources */,
 				1C3152C622A84DBB000F6A69 /* GithubService.swift in Sources */,
-				1CC8AF9B232F4D28003758CB /* Dependencies.swift in Sources */,
+				1CC8AF9B232F4D28003758CB /* Environment.swift in Sources */,
 				1C59D32322A702B200049F5C /* AppDelegate.swift in Sources */,
 				1CC8AF99232F4CF3003758CB /* App.swift in Sources */,
 				1C59D32522A702B200049F5C /* SceneDelegate.swift in Sources */,
