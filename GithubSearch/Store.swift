@@ -1,9 +1,15 @@
+//
+//  Store.swift
+//  GithubSearch
+//
+//  Created by Majid Jabrayilov on 9/16/19.
+//  Copyright © 2019 Majid Jabrayilov. All rights reserved.
+//
 import SwiftUI
 import Combine
 
-protocol Effect {
-    associatedtype Action
-    func mapToAction() -> AnyPublisher<Action, Never>
+struct Effect<Action> {
+    let publisher: AnyPublisher<Action, Never>
 }
 
 struct Reducer<State, Action> {
@@ -25,12 +31,12 @@ final class Store<State, Action>: ObservableObject {
         reducer.reduce(&state, action)
     }
 
-    func send<E: Effect>(_ effect: E) where E.Action == Action {
+    func send(_ effect: Effect<Action>) {
         var cancellable: AnyCancellable?
         var didComplete = false
 
         cancellable = effect
-            .mapToAction()
+            .publisher
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] _ in

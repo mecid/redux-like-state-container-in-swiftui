@@ -5,22 +5,22 @@
 //  Created by Majid Jabrayilov on 9/16/19.
 //  Copyright © 2019 Majid Jabrayilov. All rights reserved.
 //
-
 import Foundation
 import Combine
 
-enum AppSideEffect: Effect {
-    case search(query: String)
+extension Publisher where Failure == Never {
+    func eraseToEffect() -> Effect<Output> {
+        Effect(publisher: eraseToAnyPublisher())
+    }
+}
 
-    func mapToAction() -> AnyPublisher<AppAction, Never> {
-        switch self {
-        case let .search(query):
-            return Current.githubService
-                .searchPublisher(matching: query)
-                .replaceError(with: [])
-                .map { AppAction.setSearchResults(repos: $0) }
-                .eraseToAnyPublisher()
-        }
+extension Effect {
+    static func search(query: String) -> Effect<AppAction> {
+        return Current.githubService
+            .searchPublisher(matching: query)
+            .replaceError(with: [])
+            .map { AppAction.setSearchResults(repos: $0) }
+            .eraseToEffect()
     }
 }
 
