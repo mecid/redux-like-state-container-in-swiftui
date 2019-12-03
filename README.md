@@ -9,9 +9,8 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 import SwiftUI
 import Combine
 
-protocol Effect {
-    associatedtype Action
-    func mapToAction() -> AnyPublisher<Action, Never>
+struct Effect<Action> {
+    let publisher: AnyPublisher<Action, Never>
 }
 
 struct Reducer<State, Action> {
@@ -33,12 +32,12 @@ final class Store<State, Action>: ObservableObject {
         reducer.reduce(&state, action)
     }
 
-    func send<E: Effect>(_ effect: E) where E.Action == Action {
+    func send(_ effect: Effect<Action>) {
         var cancellable: AnyCancellable?
         var didComplete = false
 
         cancellable = effect
-            .mapToAction()
+            .publisher
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] _ in
