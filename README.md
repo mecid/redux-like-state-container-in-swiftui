@@ -9,9 +9,6 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 import SwiftUI
 import Combine
 
-import SwiftUI
-import Combine
-
 struct Effect<Action> {
     let publisher: AnyPublisher<Action, Never>
 }
