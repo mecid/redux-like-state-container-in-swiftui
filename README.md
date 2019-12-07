@@ -9,13 +9,14 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 import SwiftUI
 import Combine
 
+import SwiftUI
+import Combine
+
 struct Effect<Action> {
     let publisher: AnyPublisher<Action, Never>
 }
 
-struct Reducer<State, Action> {
-    let reduce: (inout State, Action) -> Void
-}
+typealias Reducer<State, Action> = (inout State, Action) -> Void
 
 final class Store<State, Action>: ObservableObject {
     @Published private(set) var state: State
@@ -23,13 +24,13 @@ final class Store<State, Action>: ObservableObject {
     private let reducer: Reducer<State, Action>
     private var cancellables: Set<AnyCancellable> = []
 
-    init(initialState: State, reducer: Reducer<State, Action>) {
+    init(initialState: State, reducer: @escaping Reducer<State, Action>) {
         self.state = initialState
         self.reducer = reducer
     }
 
     func send(_ action: Action) {
-        reducer.reduce(&state, action)
+        reducer(&state, action)
     }
 
     func send(_ effect: Effect<Action>) {
