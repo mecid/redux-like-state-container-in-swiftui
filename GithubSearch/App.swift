@@ -32,7 +32,7 @@ struct AppState {
     var searchResult: [Repo] = []
 }
 
-let appReducer: Reducer<AppState, AppAction> = Reducer { state, action in
+func appReducer(state: inout AppState, action: AppAction) {
     switch action {
     case let .setSearchResults(repos):
         state.searchResult = repos
