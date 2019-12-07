@@ -12,15 +12,15 @@ struct Effect<Action> {
     let publisher: AnyPublisher<Action, Never>
 }
 
-final class Store<State, Action>: ObservableObject {
-    typealias Reducer = (inout State, Action) -> Void
+typealias Reducer<State, Action> = (inout State, Action) -> Void
 
+final class Store<State, Action>: ObservableObject {
     @Published private(set) var state: State
 
-    private let reducer: Reducer
+    private let reducer: Reducer<State, Action>
     private var cancellables: Set<AnyCancellable> = []
 
-    init(initialState: State, reducer: @escaping Reducer) {
+    init(initialState: State, reducer: @escaping Reducer<State, Action>) {
         self.state = initialState
         self.reducer = reducer
     }
