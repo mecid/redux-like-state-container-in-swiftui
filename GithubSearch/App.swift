@@ -16,8 +16,7 @@ extension Publisher where Failure == Never {
 
 extension Effect {
     static func search(query: String) -> Effect<AppAction> {
-        return Current.githubService
-            .searchPublisher(matching: query)
+        return Current.searchRepos(query)
             .replaceError(with: [])
             .map { AppAction.setSearchResults(repos: $0) }
             .eraseToEffect()
