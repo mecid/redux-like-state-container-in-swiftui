@@ -8,19 +8,11 @@
 import Foundation
 import Combine
 
-extension Publisher where Failure == Never {
-    func eraseToEffect() -> Effect<Output> {
-        Effect(publisher: eraseToAnyPublisher())
-    }
-}
-
-extension Effect {
-    static func search(query: String) -> Effect<AppAction> {
-        return Current.searchRepos(query)
-            .replaceError(with: [])
-            .map { AppAction.setSearchResults(repos: $0) }
-            .eraseToEffect()
-    }
+func search(query: String) -> AnyPublisher<AppAction, Never> {
+    Current.searchRepos(query)
+        .replaceError(with: [])
+        .map { AppAction.setSearchResults(repos: $0) }
+        .eraseToAnyPublisher()
 }
 
 enum AppAction {
