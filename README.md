@@ -9,13 +9,11 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 import SwiftUI
 import Combine
 
-struct Effect<Action> {
-    let publisher: AnyPublisher<Action, Never>
-}
-
 typealias Reducer<State, Action> = (inout State, Action) -> Void
 
 final class Store<State, Action>: ObservableObject {
+    typealias Effect = AnyPublisher<Action, Never>
+    
     @Published private(set) var state: State
 
     private let reducer: Reducer<State, Action>
@@ -35,7 +33,6 @@ final class Store<State, Action>: ObservableObject {
         var didComplete = false
 
         cancellable = effect
-            .publisher
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] _ in
