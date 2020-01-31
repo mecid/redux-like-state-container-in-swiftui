@@ -6,18 +6,31 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 * [Redux-like state container in SwiftUI. Container Views.](https://swiftwithmajid.com/2019/10/02/redux-like-state-container-in-swiftui-part3/)
 
 ```swift
-import SwiftUI
+import Foundation
 import Combine
 
 typealias Reducer<State, Action> = (inout State, Action) -> Void
 
+func lift<ViewState, State, ViewAction, Action>(
+    _ reducer: @escaping Reducer<ViewState, ViewAction>,
+    keyPath: WritableKeyPath<State, ViewState>,
+    transform: @escaping (Action) -> ViewAction?
+) -> Reducer<State, Action> {
+    return { state, action in
+        if let localAction = transform(action) {
+            reducer(&state[keyPath: keyPath], localAction)
+        }
+    }
+}
+
 final class Store<State, Action>: ObservableObject {
     typealias Effect = AnyPublisher<Action, Never>
-    
+
     @Published private(set) var state: State
 
     private let reducer: Reducer<State, Action>
     private var cancellables: Set<AnyCancellable> = []
+    private var viewCancellable: AnyCancellable?
 
     init(initialState: State, reducer: @escaping Reducer<State, Action>) {
         self.state = initialState
@@ -28,25 +41,41 @@ final class Store<State, Action>: ObservableObject {
         reducer(&state, action)
     }
 
-    func send(_ effect: Effect) {
-        var cancellable: AnyCancellable?
+    func send(_ effect: Effect){
         var didComplete = false
-
+        var cancellable: AnyCancellable?
         cancellable = effect
             .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { [weak self] _ in
-                    didComplete = true
-                    if let effectCancellable = cancellable {
-                        self?.cancellables.remove(effectCancellable)
-                    }
-                }, receiveValue: send)
-
-        if !didComplete, let effectCancellable = cancellable {
-            cancellables.insert(effectCancellable)
+            .sink(receiveCompletion: { [weak self] _ in
+                didComplete = true
+                if let cancellable = cancellable {
+                    self?.cancellables.remove(cancellable)
+                }
+            }, receiveValue: send)
+        if !didComplete, let cancellable = cancellable {
+            cancellables.insert(cancellable)
         }
     }
 }
+
+extension Store {
+    func view<ViewState, ViewAction>(
+        state toLocalState: @escaping (State) -> ViewState,
+        action toGlobalAction: @escaping (ViewAction) -> Action
+    ) -> Store<ViewState, ViewAction> {
+        let viewStore = Store<ViewState, ViewAction>(
+            initialState: toLocalState(state)
+        ) { state, action in
+            self.send(toGlobalAction(action))
+        }
+        viewStore.viewCancellable = $state
+            .map(toLocalState)
+            .assign(to: \.state, on: viewStore)
+        return viewStore
+    }
+}
+
+import SwiftUI
 
 extension Store {
     func binding<Value>(
