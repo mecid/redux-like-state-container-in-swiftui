@@ -11,6 +11,12 @@ import Combine
 
 typealias Reducer<State, Action> = (inout State, Action) -> Void
 
+func combine<State, Action>(_ reducers: Reducer<State, Action>...) -> Reducer<State, Action> {
+    return { state, action in
+        reducers.forEach { $0(&state, action) }
+    }
+}
+
 func lift<ViewState, State, ViewAction, Action>(
     _ reducer: @escaping Reducer<ViewState, ViewAction>,
     keyPath: WritableKeyPath<State, ViewState>,
