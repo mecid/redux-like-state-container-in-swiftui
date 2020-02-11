@@ -11,12 +11,6 @@ import Combine
 
 typealias Reducer<State, Action> = (inout State, Action) -> Void
 
-func combine<State, Action>(_ reducers: Reducer<State, Action>...) -> Reducer<State, Action> {
-    return { state, action in
-        reducers.forEach { $0(&state, action) }
-    }
-}
-
 func lift<ViewState, State, ViewAction, Action>(
     _ reducer: @escaping Reducer<ViewState, ViewAction>,
     keyPath: WritableKeyPath<State, ViewState>,
@@ -26,6 +20,12 @@ func lift<ViewState, State, ViewAction, Action>(
         if let localAction = transform(action) {
             reducer(&state[keyPath: keyPath], localAction)
         }
+    }
+}
+
+func combine<State, Action>(_ reducers: Reducer<State, Action>...) -> Reducer<State, Action> {
+    return { state, action in
+        reducers.forEach { $0(&state, action) }
     }
 }
 
@@ -47,7 +47,7 @@ final class Store<State, Action>: ObservableObject {
         reducer(&state, action)
     }
 
-    func send(_ effect: Effect){
+    func send(_ effect: Effect) {
         var didComplete = false
         var cancellable: AnyCancellable?
         cancellable = effect
