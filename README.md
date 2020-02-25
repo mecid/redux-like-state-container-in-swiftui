@@ -9,74 +9,91 @@ Single source of truth eliminates tons of bugs produced by creating multiple sta
 import Foundation
 import Combine
 
-typealias Reducer<State, Action> = (inout State, Action) -> Void
+typealias Reducer<State, Action, Environment> =
+    (inout State, Action, Environment) -> [AnyPublisher<Action, Never>]
 
-func lift<ViewState, State, ViewAction, Action>(
-    _ reducer: @escaping Reducer<ViewState, ViewAction>,
-    keyPath: WritableKeyPath<State, ViewState>,
-    transform: @escaping (Action) -> ViewAction?
-) -> Reducer<State, Action> {
-    return { state, action in
-        if let localAction = transform(action) {
-            reducer(&state[keyPath: keyPath], localAction)
+func lift<State, Action, Environment, LiftedState, LiftedAction, LiftedEnvironment>(
+    reducer: @escaping Reducer<LiftedState, LiftedAction, LiftedEnvironment>,
+    keyPath: WritableKeyPath<State, LiftedState>,
+    extractAction: @escaping (Action) -> LiftedAction?,
+    embedAction: @escaping (LiftedAction) -> Action,
+    extractEnvironment: @escaping (Environment) -> LiftedEnvironment
+) -> Reducer<State, Action, Environment> {
+    return { state, action, environment in
+        let environment = extractEnvironment(environment)
+        guard let action = extractAction(action) else {
+            return []
         }
+        let effects = reducer(&state[keyPath: keyPath], action, environment)
+        return effects.map { $0.map(embedAction).eraseToAnyPublisher() }
     }
 }
 
-func combine<State, Action>(_ reducers: Reducer<State, Action>...) -> Reducer<State, Action> {
-    return { state, action in
-        reducers.forEach { $0(&state, action) }
+func combine<State, Action, Environment>(
+    _ reducers: Reducer<State, Action, Environment>...
+) -> Reducer<State, Action, Environment> {
+    return { state, action, environment in
+        reducers.flatMap { $0(&state, action, environment) }
     }
 }
 
-final class Store<State, Action>: ObservableObject {
-    typealias Effect = AnyPublisher<Action, Never>
-
+final class Store<State, Action, Environment>: ObservableObject {
     @Published private(set) var state: State
+    private let reducer: Reducer<State, Action, Environment>
+    private let environment: Environment
 
-    private let reducer: Reducer<State, Action>
-    private var cancellables: Set<AnyCancellable> = []
+    private var effectCancellables: Set<AnyCancellable> = []
     private var viewCancellable: AnyCancellable?
 
-    init(initialState: State, reducer: @escaping Reducer<State, Action>) {
+    init(
+        initialState: State,
+        reducer: @escaping Reducer<State, Action, Environment>,
+        environment: Environment
+    ) {
         self.state = initialState
         self.reducer = reducer
+        self.environment = environment
     }
 
     func send(_ action: Action) {
-        reducer(&state, action)
-    }
+        let effects = reducer(&state, action, environment)
 
-    func send(_ effect: Effect) {
-        var didComplete = false
-        var cancellable: AnyCancellable?
-        cancellable = effect
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { [weak self] _ in
-                didComplete = true
-                if let cancellable = cancellable {
-                    self?.cancellables.remove(cancellable)
-                }
-            }, receiveValue: send)
-        if !didComplete, let cancellable = cancellable {
-            cancellables.insert(cancellable)
+        effects.forEach { effect in
+            var didComplete = false
+            var cancellable: AnyCancellable?
+
+            cancellable = effect
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { [weak self] _ in
+                        didComplete = true
+                        cancellable.map { self?.effectCancellables.remove($0) }
+                    }, receiveValue: send)
+            if !didComplete, let cancellable = cancellable {
+                effectCancellables.insert(cancellable)
+            }
         }
     }
 }
 
 extension Store {
-    func view<ViewState, ViewAction>(
-        state toLocalState: @escaping (State) -> ViewState,
-        action toGlobalAction: @escaping (ViewAction) -> Action
-    ) -> Store<ViewState, ViewAction> {
-        let viewStore = Store<ViewState, ViewAction>(
-            initialState: toLocalState(state)
-        ) { state, action in
-            self.send(toGlobalAction(action))
-        }
+    func projection<ProjectedState, ProjectedAction>(
+        projectState: @escaping (State) -> ProjectedState,
+        projectAction: @escaping (ProjectedAction) -> Action
+    ) -> Store<ProjectedState, ProjectedAction, Void> {
+        let viewStore = Store<ProjectedState, ProjectedAction, Void>(
+            initialState: projectState(state),
+            reducer: { _, action, _ in
+                self.send(projectAction(action))
+                return []
+        },
+            environment: ()
+        )
+
         viewStore.viewCancellable = $state
-            .map(toLocalState)
+            .map(projectState)
             .assign(to: \.state, on: viewStore)
+
         return viewStore
     }
 }
@@ -86,11 +103,11 @@ import SwiftUI
 extension Store {
     func binding<Value>(
         for keyPath: KeyPath<State, Value>,
-        _ action: @escaping (Value) -> Action
+        _ toAction: @escaping (Value) -> Action
     ) -> Binding<Value> {
-        Binding<Value>(
+        Binding<Value> (
             get: { self.state[keyPath: keyPath] },
-            set: { self.send(action($0)) }
+            set: { self.send(toAction($0)) }
         )
     }
 }
