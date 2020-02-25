@@ -74,9 +74,7 @@ final class Store<State, Action, Environment>: ObservableObject {
             }
         }
     }
-}
 
-extension Store {
     func projection<ProjectedState, ProjectedAction>(
         projectState: @escaping (State) -> ProjectedState,
         projectAction: @escaping (ProjectedAction) -> Action
