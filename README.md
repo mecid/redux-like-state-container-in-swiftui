@@ -43,7 +43,7 @@ final class Store<State, Action, Environment>: ObservableObject {
     private let environment: Environment
 
     private var effectCancellables: Set<AnyCancellable> = []
-    private var viewCancellable: AnyCancellable?
+    private var projectionCancellable: AnyCancellable?
 
     init(
         initialState: State,
@@ -81,7 +81,7 @@ extension Store {
         projectState: @escaping (State) -> ProjectedState,
         projectAction: @escaping (ProjectedAction) -> Action
     ) -> Store<ProjectedState, ProjectedAction, Void> {
-        let viewStore = Store<ProjectedState, ProjectedAction, Void>(
+        let projectedStore = Store<ProjectedState, ProjectedAction, Void>(
             initialState: projectState(state),
             reducer: { _, action, _ in
                 self.send(projectAction(action))
@@ -90,11 +90,11 @@ extension Store {
             environment: ()
         )
 
-        viewStore.viewCancellable = $state
+        projectedStore.projectionCancellable = $state
             .map(projectState)
-            .assign(to: \.state, on: viewStore)
+            .assign(to: \.state, on: projectedStore)
 
-        return viewStore
+        return projectedStore
     }
 }
 
