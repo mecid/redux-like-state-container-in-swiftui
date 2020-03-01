@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 typealias Reducer<State, Action, Environment> =
-    (inout State, Action, Environment) -> [AnyPublisher<Action, Never>]
+    (inout State, Action, Environment) -> AnyPublisher<Action, Never>?
 
 func lift<State, Action, Environment, LiftedState, LiftedAction, LiftedEnvironment>(
     reducer: @escaping Reducer<LiftedState, LiftedAction, LiftedEnvironment>,
@@ -22,18 +22,22 @@ func lift<State, Action, Environment, LiftedState, LiftedAction, LiftedEnvironme
     return { state, action, environment in
         let environment = extractEnvironment(environment)
         guard let action = extractAction(action) else {
-            return []
+            return nil
         }
-        let effects = reducer(&state[keyPath: keyPath], action, environment)
-        return effects.map { $0.map(embedAction).eraseToAnyPublisher() }
+        let effect = reducer(&state[keyPath: keyPath], action, environment)
+        return effect.map { $0.map(embedAction).eraseToAnyPublisher() }
     }
 }
 
 func combine<State, Action, Environment>(
     _ reducers: Reducer<State, Action, Environment>...
 ) -> Reducer<State, Action, Environment> {
-    return { state, action, environment in
-        reducers.flatMap { $0(&state, action, environment) }
+    return { state, action, environment -> AnyPublisher<Action, Never>? in
+        let effects = reducers.compactMap { $0(&state, action, environment) }
+        return Publishers
+            .Sequence(sequence: effects)
+            .flatMap { $0 }
+            .eraseToAnyPublisher()
     }
 }
 
@@ -56,22 +60,22 @@ final class Store<State, Action, Environment>: ObservableObject {
     }
 
     func send(_ action: Action) {
-        let effects = reducer(&state, action, environment)
+        guard let effect = reducer(&state, action, environment) else {
+            return
+        }
 
-        effects.forEach { effect in
-            var didComplete = false
-            var cancellable: AnyCancellable?
+        var didComplete = false
+        var cancellable: AnyCancellable?
 
-            cancellable = effect
-                .receive(on: DispatchQueue.main)
-                .sink(
-                    receiveCompletion: { [weak self] _ in
-                        didComplete = true
-                        cancellable.map { self?.effectCancellables.remove($0) }
-                    }, receiveValue: send)
-            if !didComplete, let cancellable = cancellable {
-                effectCancellables.insert(cancellable)
-            }
+        cancellable = effect
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] _ in
+                    didComplete = true
+                    cancellable.map { self?.effectCancellables.remove($0) }
+                }, receiveValue: send)
+        if !didComplete, let cancellable = cancellable {
+            effectCancellables.insert(cancellable)
         }
     }
 
@@ -83,7 +87,7 @@ final class Store<State, Action, Environment>: ObservableObject {
             initialState: projectState(state),
             reducer: { _, action, _ in
                 self.send(projectAction(action))
-                return []
+                return nil
         },
             environment: ()
         )
