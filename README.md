@@ -105,7 +105,7 @@ import SwiftUI
 extension Store {
     func binding<Value>(
         for keyPath: KeyPath<State, Value>,
-        _ toAction: @escaping (Value) -> Action
+        toAction: @escaping (Value) -> Action
     ) -> Binding<Value> {
         Binding<Value> (
             get: { self.state[keyPath: keyPath] },
