@@ -8,24 +8,37 @@
 import Foundation
 import Combine
 
-func search(query: String) -> AnyPublisher<AppAction, Never> {
-    Current.searchRepos(query)
-        .replaceError(with: [])
-        .map { AppAction.setSearchResults(repos: $0) }
-        .eraseToAnyPublisher()
+// For more information check "How To Control The World" - Stephen Celis
+// https://vimeo.com/291588126
+struct World {
+    var service = GithubService()
 }
 
 enum AppAction {
     case setSearchResults(repos: [Repo])
+    case search(query: String)
 }
 
 struct AppState {
     var searchResult: [Repo] = []
 }
 
-func appReducer(state: inout AppState, action: AppAction) {
+func appReducer(
+    state: inout AppState,
+    action: AppAction,
+    environment: World
+) -> AnyPublisher<AppAction, Never> {
     switch action {
     case let .setSearchResults(repos):
         state.searchResult = repos
+    case let .search(query):
+        return environment.service
+            .searchPublisher(matching: query)
+            .replaceError(with: [])
+            .map { AppAction.setSearchResults(repos: $0) }
+            .eraseToAnyPublisher()
     }
+    return Empty().eraseToAnyPublisher()
 }
+
+typealias AppStore = Store<AppState, AppAction, World>

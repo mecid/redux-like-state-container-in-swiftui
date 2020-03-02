@@ -24,7 +24,7 @@ struct RepoRow: View {
 }
 
 struct SearchContainerView: View {
-    @EnvironmentObject var store: Store<AppState, AppAction>
+    @EnvironmentObject var store: AppStore
     @State private var query: String = "Swift"
 
     var body: some View {
@@ -36,7 +36,7 @@ struct SearchContainerView: View {
     }
 
     private func fetch() {
-        store.send(search(query: query))
+        store.send(.search(query: query))
     }
 }
 
