@@ -43,6 +43,7 @@ func combine<State, Action, Environment>(
 
 final class Store<State, Action, Environment>: ObservableObject {
     @Published private(set) var state: State
+    
     private let reducer: Reducer<State, Action, Environment>
     private let environment: Environment
 
@@ -70,7 +71,7 @@ final class Store<State, Action, Environment>: ObservableObject {
         cancellable = effect
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] _ in
+                receiveCompletion: { [weak self, weak cancellable] _ in
                     didComplete = true
                     cancellable.map { self?.effectCancellables.remove($0) }
                 }, receiveValue: send)
@@ -79,7 +80,7 @@ final class Store<State, Action, Environment>: ObservableObject {
         }
     }
 
-    func projection<ProjectedState, ProjectedAction>(
+    func projection<ProjectedState: Equatable, ProjectedAction>(
         projectState: @escaping (State) -> ProjectedState,
         projectAction: @escaping (ProjectedAction) -> Action
     ) -> Store<ProjectedState, ProjectedAction, Void> {
@@ -94,6 +95,7 @@ final class Store<State, Action, Environment>: ObservableObject {
 
         store.projectionCancellable = $state
             .map(projectState)
+            .removeDuplicates()
             .assign(to: \.state, on: store)
 
         return store
@@ -107,7 +109,7 @@ extension Store {
         for keyPath: KeyPath<State, Value>,
         toAction: @escaping (Value) -> Action
     ) -> Binding<Value> {
-        Binding<Value> (
+        Binding<Value>(
             get: { self.state[keyPath: keyPath] },
             set: { self.send(toAction($0)) }
         )
