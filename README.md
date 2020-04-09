@@ -86,7 +86,7 @@ final class Store<State, Action, Environment>: ObservableObject {
     ) -> Store<ProjectedState, ProjectedAction, Void> {
         let store = Store<ProjectedState, ProjectedAction, Void>(
             initialState: projectState(state),
-            reducer: { _, action, _ in
+            reducer: Reducer { _, action, _ in
                 self.send(projectAction(action))
                 return nil
         },
@@ -96,7 +96,7 @@ final class Store<State, Action, Environment>: ObservableObject {
         store.projectionCancellable = $state
             .map(projectState)
             .removeDuplicates()
-            .assign(to: \.state, on: store)
+            .sink { [weak store] in store?.state = $0 }
 
         return store
     }
