@@ -73,7 +73,7 @@ final class Store<State, Action, Environment>: ObservableObject {
                 receiveCompletion: { [weak self, weak cancellable] _ in
                     didComplete = true
                     cancellable.map { self?.effectCancellables.remove($0) }
-                }, receiveValue: send)
+                }, receiveValue: { [weak self] in self?.send($0) })
         if !didComplete, let cancellable = cancellable {
             effectCancellables.insert(cancellable)
         }
@@ -85,7 +85,7 @@ final class Store<State, Action, Environment>: ObservableObject {
     ) -> Store<ProjectedState, ProjectedAction, Void> {
         let store = Store<ProjectedState, ProjectedAction, Void>(
             initialState: projectState(state),
-            reducer: Reducer { _, action, _ in
+            reducer: { _, action, _ in
                 self.send(projectAction(action))
                 return nil
         },
