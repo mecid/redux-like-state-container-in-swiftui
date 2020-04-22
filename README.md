@@ -15,11 +15,9 @@ typealias Reducer<State, Action, Environment> =
 final class Store<State, Action, Environment>: ObservableObject {
     @Published private(set) var state: State
     
-    private let reducer: Reducer<State, Action, Environment>
     private let environment: Environment
-
+    private let reducer: Reducer<State, Action, Environment>
     private var effectCancellables: Set<AnyCancellable> = []
-    private var projectionCancellable: AnyCancellable?
 
     init(
         initialState: State,
