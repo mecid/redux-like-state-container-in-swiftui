@@ -12,35 +12,6 @@ import Combine
 typealias Reducer<State, Action, Environment> =
     (inout State, Action, Environment) -> AnyPublisher<Action, Never>?
 
-func lift<State, Action, Environment, LiftedState, LiftedAction, LiftedEnvironment>(
-    reducer: @escaping Reducer<LiftedState, LiftedAction, LiftedEnvironment>,
-    keyPath: WritableKeyPath<State, LiftedState>,
-    extractAction: @escaping (Action) -> LiftedAction?,
-    embedAction: @escaping (LiftedAction) -> Action,
-    extractEnvironment: @escaping (Environment) -> LiftedEnvironment
-) -> Reducer<State, Action, Environment> {
-    return { state, action, environment in
-        let environment = extractEnvironment(environment)
-        guard let action = extractAction(action) else {
-            return nil
-        }
-        let effect = reducer(&state[keyPath: keyPath], action, environment)
-        return effect.map { $0.map(embedAction).eraseToAnyPublisher() }
-    }
-}
-
-func combine<State, Action, Environment>(
-    _ reducers: Reducer<State, Action, Environment>...
-) -> Reducer<State, Action, Environment> {
-    return { state, action, environment -> AnyPublisher<Action, Never>? in
-        let effects = reducers.compactMap { $0(&state, action, environment) }
-        return Publishers
-            .Sequence(sequence: effects)
-            .flatMap { $0 }
-            .eraseToAnyPublisher()
-    }
-}
-
 final class Store<State, Action, Environment>: ObservableObject {
     @Published private(set) var state: State
     
