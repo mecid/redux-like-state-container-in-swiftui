@@ -14,7 +14,7 @@ typealias Reducer<State, Action, Environment> =
 
 final class Store<State, Action, Environment>: ObservableObject {
     @Published private(set) var state: State
-    
+
     private let environment: Environment
     private let reducer: Reducer<State, Action, Environment>
     private var effectCancellables: Set<AnyCancellable> = []
@@ -33,20 +33,11 @@ final class Store<State, Action, Environment>: ObservableObject {
         guard let effect = reducer(&state, action, environment) else {
             return
         }
-
-        var didComplete = false
-        var cancellable: AnyCancellable?
-
-        cancellable = effect
+        
+        effect
             .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { [weak self, weak cancellable] _ in
-                    didComplete = true
-                    cancellable.map { self?.effectCancellables.remove($0) }
-                }, receiveValue: { [weak self] in self?.send($0) })
-        if !didComplete, let cancellable = cancellable {
-            effectCancellables.insert(cancellable)
-        }
+            .sink(receiveValue: send)
+            .store(in: &effectCancellables)
     }
 }
 
