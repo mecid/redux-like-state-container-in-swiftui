@@ -50,27 +50,6 @@ final class Store<State, Action, Environment>: ObservableObject {
             effectCancellables.insert(cancellable)
         }
     }
-
-    func projection<ProjectedState: Equatable, ProjectedAction>(
-        projectState: @escaping (State) -> ProjectedState,
-        projectAction: @escaping (ProjectedAction) -> Action
-    ) -> Store<ProjectedState, ProjectedAction, Void> {
-        let store = Store<ProjectedState, ProjectedAction, Void>(
-            initialState: projectState(state),
-            reducer: { _, action, _ in
-                self.send(projectAction(action))
-                return nil
-        },
-            environment: ()
-        )
-
-        store.projectionCancellable = $state
-            .map(projectState)
-            .removeDuplicates()
-            .sink { [weak store] in store?.state = $0 }
-
-        return store
-    }
 }
 
 import SwiftUI
